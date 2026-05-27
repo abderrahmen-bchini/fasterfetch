@@ -17,7 +17,7 @@ A retro distro information fetcher for Linux. Reads system data directly from ke
 **Quick install (requires root for /usr/local):**
 
 ```bash
-bash install.sh
+sudo bash install.sh
 ```
 
 Or with a custom prefix:
