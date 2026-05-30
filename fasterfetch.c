@@ -22,12 +22,12 @@
 
 
 static const char *default_ascii[] = {
-    "███╗   ███╗██╗   ██╗    ███████╗███████╗████████╗ ██████╗██╗  ██╗",
-    "████╗ ████║╚██╗ ██╔╝    ██╔════╝██╔════╝╚══██╔══╝██╔════╝██║  ██║",
-    "██╔████╔██║ ╚████╔╝     █████╗  █████╗     ██║   ██║     ███████║",
-    "██║╚██╔╝██║  ╚██╔╝      ██╔══╝  ██╔══╝     ██║   ██║     ██╔══██║",
-    "██║ ╚═╝ ██║   ██║       ██║     ███████╗   ██║   ╚██████╗██║  ██║",
-    "╚═╝     ╚═╝   ╚═╝       ╚═╝     ╚══════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝"
+    "███████╗ █████╗ ███████╗████████╗███████╗██████╗ ███████╗███████╗████████╗ ██████╗██╗  ██╗",
+    "██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔══██╗██╔════╝██╔════╝╚══██╔══╝██╔════╝██║  ██║",
+    "█████╗  ███████║███████╗   ██║   █████╗  ██████╔╝█████╗  █████╗     ██║   ██║     ███████║",
+    "██╔══╝  ██╔══██║╚════██║   ██║   ██╔══╝  ██╔══██╗██╔══╝  ██╔══╝     ██║   ██║     ██╔══██║",
+    "██║     ██║  ██║███████║   ██║   ███████╗██║  ██║██║     ███████╗   ██║   ╚██████╗██║  ██║",
+    "╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚══════╝   ╚═╝    ╚═════╝╚═╝  ╚═╝"
 };
 static const int default_ascii_lines = 6;
 
@@ -413,7 +413,7 @@ static const char **pick_logo(const char *lower, int *lines_out) {
         strstr(lower, "rhel")    || strstr(lower, "centos")) LOGO(redhat_logo);
     if (strstr(lower, "linux"))  LOGO(linux_logo);
     if (strstr(lower, "macos") || strstr(lower, "darwin") || strstr(lower, "apple")) LOGO(macos_logo);
-    if (strstr(lower, "default") || strstr(lower, "myfetch")) LOGO(default_ascii);
+    if (strstr(lower, "default") || strstr(lower, "fasterfetch")) LOGO(default_ascii);
 #undef LOGO
     return NULL;
 }
@@ -502,7 +502,7 @@ static void get_terminal(char *buf, size_t max_len) {
     static const char *skip_list[] = {
         "bash", "zsh", "sh", "fish", "orig-fish", "ksh", "dash", "csh", "tcsh",
         "sudo", "su", "doas", "systemd", "init", "login",
-        "myfetch", "sh.exe", "bash.exe", NULL
+        "fasterfetch", "sh.exe", "bash.exe", NULL
     };
 
     char matched[256] = "";
@@ -1104,7 +1104,7 @@ int main(int argc, char **argv) {
     if (!ascii_lines && force_logo_name) {
         is_embedded = 1;
     }
-    /* ~/.config/myfetch/ascii.txt — user config, highest file priority */
+    /* ~/.config/fasterfetch/ascii.txt — user config, highest file priority */
     if (!ascii_lines && !is_embedded) {
         const char *home = getenv("HOME");
         if (!home) {
@@ -1113,7 +1113,7 @@ int main(int argc, char **argv) {
         }
         if (home) {
             char config_path[1024];
-            snprintf(config_path, sizeof(config_path), "%s/.config/myfetch/ascii.txt", home);
+            snprintf(config_path, sizeof(config_path), "%s/.config/fasterfetch/ascii.txt", home);
             ascii_lines = load_ascii_file(config_path, &num_ascii_lines);
         }
     }
@@ -1126,9 +1126,9 @@ int main(int argc, char **argv) {
         snprintf(local_path, sizeof(local_path), "%s/ascii.txt", exe_dir);
         ascii_lines = load_ascii_file(local_path, &num_ascii_lines);
     }
-    /* /usr/share/myfetch/ascii.txt — system-installed default art */
+    /* /usr/share/fasterfetch/ascii.txt — system-installed default art */
     if (!ascii_lines && !is_embedded) {
-        ascii_lines = load_ascii_file("/usr/share/myfetch/ascii.txt", &num_ascii_lines);
+        ascii_lines = load_ascii_file("/usr/share/fasterfetch/ascii.txt", &num_ascii_lines);
     }
     if (!ascii_lines)
         is_embedded = 1;

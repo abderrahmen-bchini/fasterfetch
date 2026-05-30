@@ -1,16 +1,17 @@
-.TH MYFETCH 1 "2026" "myfetch" "User Commands"
+.TH FASTERFETCH 1 "2026" "fasterfetch" "User Commands"
 .SH NAME
-myfetch \- a retro distro information fetcher
+fasterfetch \- a retro distro information fetcher
 .SH SYNOPSIS
-.B myfetch
+.B fasterfetch
 [\fIOPTIONS\fR]
 .SH DESCRIPTION
-.B myfetch
+.B fasterfetch
 displays system information alongside ASCII art, centered in the terminal.
-It reads system data directly from Linux kernel interfaces — no shell subprocesses.
+It reads system data directly from kernel interfaces — no shell subprocesses.
+Works on Linux and macOS.
 .PP
 Displayed fields: OS, Kernel, Uptime, Shell, Terminal, CPU (with temperature),
-GPU, Packages, Memory, Disk, and Battery (when present).
+GPU, Packages, Memory, Disk, Battery, and Local IP (when present).
 .SH OPTIONS
 .TP
 .BR \-a ", " \-\-ascii " " \fIfile\fR
@@ -19,7 +20,7 @@ Load ASCII art from \fIfile\fR instead of the default.
 .BR \-f ", " \-\-force\-logo " " \fIname\fR
 Force a built-in distro logo. Supported names:
 .BR arch ", " debian ", " ubuntu ", " fedora ", " alpine ", " kali ", " gentoo ", "
-.BR mint ", " nixos ", " redhat ", " linux ", " default .
+.BR mint ", " nixos ", " redhat ", " linux ", " macos ", " default .
 .TP
 .BR \-t ", " \-\-theme " " \fIname\fR
 Apply a named color theme to borders and labels.
@@ -35,10 +36,10 @@ Disable full-screen vertical centering. Useful for scrollback-friendly output.
 Print a usage summary and exit.
 .SH FILES
 .TP
-.I ~/.config/myfetch/ascii.txt
+.I ~/.config/fasterfetch/ascii.txt
 User-specific ASCII art. Checked first (after \fB\-a\fR).
 .TP
-.I /usr/share/myfetch/ascii.txt
+.I /usr/share/fasterfetch/ascii.txt
 System-wide default ASCII art installed by \fBmake install\fR.
 .TP
 .I ./ascii.txt
@@ -47,25 +48,25 @@ Fallback when running from the source directory.
 Run with default settings:
 .PP
 .RS
-.B myfetch
+.B fasterfetch
 .RE
 .PP
 Use the Nord color theme without vertical centering:
 .PP
 .RS
-.B myfetch \-t nord \-n
+.B fasterfetch \-t nord \-n
 .RE
 .PP
-Force the Arch logo with Dracula colors:
+Force the macOS Apple logo with Dracula colors:
 .PP
 .RS
-.B myfetch \-f arch \-t dracula
+.B fasterfetch \-f macos \-t dracula
 .RE
 .PP
 Use a custom ASCII art file:
 .PP
 .RS
-.B myfetch \-a ~/my-art.txt
+.B fasterfetch \-a ~/my-art.txt
 .RE
 .SH AUTHOR
 Written by abderrahmen bchini.

@@ -1,4 +1,4 @@
-# myfetch
+# fasterfetch
 
 A retro fetch tool for Linux and macOS. Reads system info directly from kernel interfaces — no shell subprocesses, no bloat.
 
@@ -38,21 +38,21 @@ Works on macOS too, just swap `gcc` for `clang` if needed (though `gcc` usually 
 **Set your personal ASCII art:**
 
 ```bash
-mkdir -p ~/.config/myfetch
-cp ascii.txt ~/.config/myfetch/ascii.txt
+mkdir -p ~/.config/fasterfetch
+cp ascii.txt ~/.config/fasterfetch/ascii.txt
 ```
 
 ## Usage
 
 ```bash
-myfetch                        # full-screen centered output
-myfetch -n                     # inline/scroll mode
-myfetch -t nord                # Nord color theme
-myfetch -t dracula -n          # Dracula theme, no vertical centering
-myfetch -f arch                # force Arch logo
-myfetch -f macos               # force the macOS Apple logo
-myfetch -a ~/my-art.txt        # custom ASCII art file
-myfetch -h                     # help
+fasterfetch                        # full-screen centered output
+fasterfetch -n                     # inline/scroll mode
+fasterfetch -t nord                # Nord color theme
+fasterfetch -t dracula -n          # Dracula theme, no vertical centering
+fasterfetch -f arch                # force Arch logo
+fasterfetch -f macos               # force the macOS Apple logo
+fasterfetch -a ~/my-art.txt        # custom ASCII art file
+fasterfetch -h                     # help
 ```
 
 ## Themes
@@ -69,23 +69,23 @@ myfetch -h                     # help
 ## ASCII Art Search Order
 
 1. `-a <file>` — explicit path
-2. `~/.config/myfetch/ascii.txt` — user config
+2. `~/.config/fasterfetch/ascii.txt` — user config
 3. `./ascii.txt` — current directory
 4. `<exe_dir>/ascii.txt` — next to binary
-5. `/usr/share/myfetch/ascii.txt` — system default
+5. `/usr/share/fasterfetch/ascii.txt` — system default
 6. Built-in distro logo (auto-detected or forced with `-f`)
-7. Built-in "MY FETCH" banner (last resort)
+7. Built-in "FASTERFETCH" banner (last resort)
 
 ## Build from Source
 
 **Linux:**
 ```bash
-gcc -O2 -Wall -Wextra myfetch.c -o myfetch
+gcc -O2 -Wall -Wextra fasterfetch.c -o fasterfetch
 ```
 
 **macOS:**
 ```bash
-clang -O2 -Wall -Wextra myfetch.c -o myfetch
+clang -O2 -Wall -Wextra fasterfetch.c -o fasterfetch
 ```
 
 No external dependencies on either platform.

@@ -3,34 +3,34 @@ CC      = gcc
 CFLAGS  = -O2 -Wall -Wextra
 PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
-DATADIR = $(PREFIX)/share/myfetch
+DATADIR = $(PREFIX)/share/fasterfetch
 MANDIR  = $(PREFIX)/share/man/man1
 
 .PHONY: all install uninstall clean
 
-all: myfetch
+all: fasterfetch
 
-myfetch: myfetch.c
-	$(CC) $(CFLAGS) myfetch.c -o myfetch
+fasterfetch: fasterfetch.c
+	$(CC) $(CFLAGS) fasterfetch.c -o fasterfetch
 
 ifeq ($(UNAME), Darwin)
-install: myfetch
+install: fasterfetch
 	install -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)
-	install -m 755 myfetch   $(DESTDIR)$(BINDIR)/myfetch
-	install -m 644 myfetch.1 $(DESTDIR)$(MANDIR)/myfetch.1
+	install -m 755 fasterfetch   $(DESTDIR)$(BINDIR)/fasterfetch
+	install -m 644 fasterfetch.1 $(DESTDIR)$(MANDIR)/fasterfetch.1
 	@if [ -f ascii.txt ]; then install -d $(DESTDIR)$(DATADIR) && install -m 644 ascii.txt $(DESTDIR)$(DATADIR)/ascii.txt; fi
 else
-install: myfetch
-	install -Dm755 myfetch   $(DESTDIR)$(BINDIR)/myfetch
-	install -Dm644 myfetch.1 $(DESTDIR)$(MANDIR)/myfetch.1
+install: fasterfetch
+	install -Dm755 fasterfetch   $(DESTDIR)$(BINDIR)/fasterfetch
+	install -Dm644 fasterfetch.1 $(DESTDIR)$(MANDIR)/fasterfetch.1
 	@if [ -f ascii.txt ]; then install -Dm644 ascii.txt $(DESTDIR)$(DATADIR)/ascii.txt; fi
 endif
 
 uninstall:
-	rm -f $(DESTDIR)$(BINDIR)/myfetch
+	rm -f $(DESTDIR)$(BINDIR)/fasterfetch
 	rm -f $(DESTDIR)$(DATADIR)/ascii.txt
-	rm -f $(DESTDIR)$(MANDIR)/myfetch.1
+	rm -f $(DESTDIR)$(MANDIR)/fasterfetch.1
 	-rmdir $(DESTDIR)$(DATADIR) 2>/dev/null || true
 
 clean:
-	rm -f myfetch
+	rm -f fasterfetch
