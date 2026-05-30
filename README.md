@@ -1,14 +1,14 @@
 # myfetch
 
-A retro distro information fetcher for Linux. Reads system data directly from kernel interfaces — no shell subprocesses.
+A retro fetch tool for Linux and macOS. Reads system info directly from kernel interfaces — no shell subprocesses, no bloat.
 
 ## Features
 
-- OS, Kernel, Uptime, Shell, Terminal, CPU, GPU, Memory, Disk, Battery, Packages
+- OS, Kernel, Uptime, Shell, Terminal, CPU, GPU, Memory, Disk, Battery, Packages, Local IP
 - CPU temperature via `/sys/class/thermal`
 - GPU name resolved from `pci.ids`
 - Named color themes: nord, dracula, gruvbox, catppuccin, amber
-- Built-in logos for Arch, Debian, Ubuntu, Fedora, Alpine, Kali, Gentoo, Mint, NixOS, Red Hat
+- Built-in logos for Arch, Debian, Ubuntu, Fedora, Alpine, Kali, Gentoo, Mint, NixOS, Red Hat, and macOS (rainbow Apple logo)
 - Custom ASCII art support
 - Full-screen vertical centering
 
@@ -20,7 +20,7 @@ A retro distro information fetcher for Linux. Reads system data directly from ke
 sudo bash install.sh
 ```
 
-Or with a custom prefix:
+Or without sudo:
 
 ```bash
 PREFIX=~/.local bash install.sh
@@ -32,6 +32,8 @@ PREFIX=~/.local bash install.sh
 make
 sudo make install
 ```
+
+Works on macOS too, just swap `gcc` for `clang` if needed (though `gcc` usually works fine).
 
 **Set your personal ASCII art:**
 
@@ -48,20 +50,21 @@ myfetch -n                     # inline/scroll mode
 myfetch -t nord                # Nord color theme
 myfetch -t dracula -n          # Dracula theme, no vertical centering
 myfetch -f arch                # force Arch logo
+myfetch -f macos               # force the macOS Apple logo
 myfetch -a ~/my-art.txt        # custom ASCII art file
 myfetch -h                     # help
 ```
 
 ## Themes
 
-| Name        | Description                  |
-|-------------|------------------------------|
-| `default`   | Auto-detected from distro    |
-| `nord`      | Arctic blue palette          |
-| `dracula`   | Purple/pink palette          |
-| `gruvbox`   | Warm orange/yellow palette   |
-| `catppuccin`| Soft lavender palette        |
-| `amber`     | Golden amber palette         |
+| Name          | Description                  |
+|---------------|------------------------------|
+| `default`     | Auto-detected from distro    |
+| `nord`        | Arctic blue palette          |
+| `dracula`     | Purple/pink palette          |
+| `gruvbox`     | Warm orange/yellow palette   |
+| `catppuccin`  | Soft lavender palette        |
+| `amber`       | Golden amber palette         |
 
 ## ASCII Art Search Order
 
@@ -75,11 +78,17 @@ myfetch -h                     # help
 
 ## Build from Source
 
-Requires: `gcc`, standard glibc.
-
+**Linux:**
 ```bash
 gcc -O2 -Wall -Wextra myfetch.c -o myfetch
 ```
+
+**macOS:**
+```bash
+clang -O2 -Wall -Wextra myfetch.c -o myfetch
+```
+
+No external dependencies on either platform.
 
 ## Uninstall
 
@@ -89,4 +98,4 @@ sudo make uninstall
 
 ## License
 
-idk everyone i guess , just mention me :)  
+idk everyone i guess , just mention me :)

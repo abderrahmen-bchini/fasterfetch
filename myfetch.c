@@ -8,6 +8,17 @@
 #include <pwd.h>
 #include <sys/statvfs.h>
 #include <dirent.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#ifdef __APPLE__
+#  include <sys/sysctl.h>
+#  include <mach/mach.h>
+#  include <mach-o/dyld.h>
+#  include <libproc.h>
+#  include <time.h>
+#endif
 
 
 static const char *default_ascii[] = {
@@ -260,6 +271,27 @@ static const char *linux_logo[] = {
 };
 static const int linux_logo_lines = 7;
 
+static const char *macos_logo[] = {
+    "\033[38;5;34m                    c.'\033[0m",
+    "\033[38;5;34m                 ,xNMM.\033[0m",
+    "\033[38;5;34m               .OMMMMo\033[0m",
+    "\033[38;5;34m               lMM\"\033[0m",
+    "\033[38;5;34m     .;loddo:.  .olloddol;.\033[0m",
+    "\033[38;5;34m   cKMMMMMMMMMMNWMMMMMMMMMM0:\033[0m",
+    "\033[38;5;226m .KMMMMMMMMMMMMMMMMMMMMMMMWd.\033[0m",
+    "\033[38;5;226m XMMMMMMMMMMMMMMMMMMMMMMMX.\033[0m",
+    "\033[38;5;208m;MMMMMMMMMMMMMMMMMMMMMMMM:\033[0m",
+    "\033[38;5;208m:MMMMMMMMMMMMMMMMMMMMMMMM:\033[0m",
+    "\033[38;5;196m.MMMMMMMMMMMMMMMMMMMMMMMMX.\033[0m",
+    "\033[38;5;196m kMMMMMMMMMMMMMMMMMMMMMMMMWd.\033[0m",
+    " \033[38;5;93m'XMMMMMMMMMMMMMMMMMMMMMMMMMMk\033[0m",
+    "\033[38;5;93m  'XMMMMMMMMMMMMMMMMMMMMMMMMK.\033[0m",
+    "    \033[38;5;33mkMMMMMMMMMMMMMMMMMMMMMMd\033[0m",
+    "\033[38;5;33m     ;KMMMMMMMWXXWMMMMMMMk.\033[0m",
+    "\033[38;5;33m       \"cooc*\"    \"*coo'\"\033[0m",
+};
+static const int macos_logo_lines = 17;
+
 /* Theme system */
 
 typedef struct { const char *name, *border, *label; } Theme;
@@ -338,6 +370,7 @@ static void build_bar(char *out, size_t out_len, double pct, int bar_width, int 
     }
 }
 
+#ifndef __APPLE__
 /* read /proc/meminfo in a single pass; returns 1 on success. */
 static int read_meminfo_kb(long *total_kb, long *used_kb) {
     FILE *fp = fopen("/proc/meminfo", "r");
@@ -362,6 +395,7 @@ static int read_meminfo_kb(long *total_kb, long *used_kb) {
     *used_kb  = u < 0 ? 0 : u;
     return 1;
 }
+#endif
 
 /* select an embedded logo by lowercase distro/override name. Returns NULL if no match. */
 static const char **pick_logo(const char *lower, int *lines_out) {
@@ -378,6 +412,7 @@ static const char **pick_logo(const char *lower, int *lines_out) {
     if (strstr(lower, "red hat") || strstr(lower, "redhat") ||
         strstr(lower, "rhel")    || strstr(lower, "centos")) LOGO(redhat_logo);
     if (strstr(lower, "linux"))  LOGO(linux_logo);
+    if (strstr(lower, "macos") || strstr(lower, "darwin") || strstr(lower, "apple")) LOGO(macos_logo);
     if (strstr(lower, "default") || strstr(lower, "myfetch")) LOGO(default_ascii);
 #undef LOGO
     return NULL;
@@ -385,6 +420,15 @@ static const char **pick_logo(const char *lower, int *lines_out) {
 
 /* System data functions */
 
+#ifdef __APPLE__
+static pid_t get_process_info(pid_t pid, char *comm, size_t comm_len) {
+    struct proc_bsdinfo info;
+    if (proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, sizeof(info)) <= 0)
+        return -1;
+    snprintf(comm, comm_len, "%s", info.pbi_name);
+    return (pid_t)info.pbi_ppid;
+}
+#else
 static pid_t get_process_info(pid_t pid, char *comm, size_t comm_len) {
     char path[256];
     snprintf(path, sizeof(path), "/proc/%d/stat", pid);
@@ -414,6 +458,7 @@ static pid_t get_process_info(pid_t pid, char *comm, size_t comm_len) {
     sscanf(last_paren + 1, " %c %d", &state, &ppid);
     return ppid;
 }
+#endif
 
 static void get_terminal(char *buf, size_t max_len) {
     const char *tp = getenv("TERM_PROGRAM");
@@ -519,6 +564,14 @@ static void get_terminal(char *buf, size_t max_len) {
     else      set_buf(buf, max_len, "Unknown");
 }
 
+#ifdef __APPLE__
+static void get_os(char *buf, size_t max_len) {
+    char version[64] = "Unknown";
+    size_t len = sizeof(version);
+    sysctlbyname("kern.osproductversion", version, &len, NULL, 0);
+    snprintf(buf, max_len, "macOS %s", version);
+}
+#else
 static void get_os(char *buf, size_t max_len) {
     FILE *fp = fopen("/etc/os-release", "r");
     if (!fp) { set_buf(buf, max_len, "Linux"); return; }
@@ -537,6 +590,7 @@ static void get_os(char *buf, size_t max_len) {
     fclose(fp);
     set_buf(buf, max_len, "Linux");
 }
+#endif
 
 static void get_kernel(char *buf, size_t max_len) {
     struct utsname u;
@@ -544,6 +598,22 @@ static void get_kernel(char *buf, size_t max_len) {
     else set_buf(buf, max_len, "Linux");
 }
 
+#ifdef __APPLE__
+static void get_uptime(char *buf, size_t max_len) {
+    struct timeval boottime;
+    size_t len = sizeof(boottime);
+    if (sysctlbyname("kern.boottime", &boottime, &len, NULL, 0) != 0) {
+        set_buf(buf, max_len, "Unknown"); return;
+    }
+    double secs = difftime(time(NULL), boottime.tv_sec);
+    int days  = (int)(secs / 86400);
+    int hours = (int)((secs - days * 86400) / 3600);
+    int mins  = (int)((secs - days * 86400 - hours * 3600) / 60);
+    if (days > 0)       snprintf(buf, max_len, "%d days, %d hours, %d mins", days, hours, mins);
+    else if (hours > 0) snprintf(buf, max_len, "%d hours, %d mins", hours, mins);
+    else                snprintf(buf, max_len, "%d mins", mins);
+}
+#else
 static void get_uptime(char *buf, size_t max_len) {
     FILE *fp = fopen("/proc/uptime", "r");
     if (!fp) { set_buf(buf, max_len, "Unknown"); return; }
@@ -560,6 +630,7 @@ static void get_uptime(char *buf, size_t max_len) {
     else if (hours > 0) snprintf(buf, max_len, "%d hours, %d mins", hours, mins);
     else snprintf(buf, max_len, "%d mins", mins);
 }
+#endif
 
 static void get_shell(char *buf, size_t max_len) {
     char *path = getenv("SHELL");
@@ -572,6 +643,30 @@ static void get_shell(char *buf, size_t max_len) {
     set_buf(buf, max_len, base ? base + 1 : path);
 }
 
+#ifdef __APPLE__
+static void get_memory_bar(char *buf, size_t max_len) {
+    uint64_t total_bytes = 0;
+    size_t len = sizeof(total_bytes);
+    if (sysctlbyname("hw.memsize", &total_bytes, &len, NULL, 0) != 0) {
+        set_buf(buf, max_len, "Unknown"); return;
+    }
+    vm_size_t page_size = 0;
+    host_page_size(mach_host_self(), &page_size);
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    vm_statistics64_data_t vmstat;
+    if (host_statistics64(mach_host_self(), HOST_VM_INFO64,
+                          (host_info64_t)&vmstat, &count) != KERN_SUCCESS) {
+        set_buf(buf, max_len, "Unknown"); return;
+    }
+    uint64_t used_bytes = (uint64_t)(vmstat.active_count + vmstat.wire_count) * page_size;
+    double pct   = total_bytes > 0 ? ((double)used_bytes / total_bytes) * 100.0 : 0.0;
+    double total = total_bytes / 1073741824.0;
+    double used  = used_bytes  / 1073741824.0;
+    char bar[96];
+    build_bar(bar, sizeof(bar), pct, 10, 0);
+    snprintf(buf, max_len, "%s %.0f%% (%.2f / %.2f GiB)", bar, pct, used, total);
+}
+#else
 static void get_memory_bar(char *buf, size_t max_len) {
     long total_kb, used_kb;
     if (!read_meminfo_kb(&total_kb, &used_kb)) { set_buf(buf, max_len, "Unknown"); return; }
@@ -584,6 +679,7 @@ static void get_memory_bar(char *buf, size_t max_len) {
     build_bar(bar, sizeof(bar), pct, 10, 0);
     snprintf(buf, max_len, "%s %.0f%% (%.2f / %.2f GiB)", bar, pct, used, total);
 }
+#endif
 
 static void clean_cpu_string(char *cpu) {
     char *p;
@@ -607,6 +703,18 @@ static void clean_cpu_string(char *cpu) {
     else                           cpu[j]   = '\0';
 }
 
+#ifdef __APPLE__
+static void get_cpu(char *buf, size_t max_len) {
+    char tmp[256] = "";
+    size_t len = sizeof(tmp);
+    if (sysctlbyname("machdep.cpu.brand_string", tmp, &len, NULL, 0) == 0) {
+        clean_cpu_string(tmp);
+        set_buf(buf, max_len, tmp);
+    } else {
+        set_buf(buf, max_len, "Unknown CPU");
+    }
+}
+#else
 static void get_cpu(char *buf, size_t max_len) {
     FILE *fp = fopen("/proc/cpuinfo", "r");
     if (!fp) { set_buf(buf, max_len, "Unknown"); return; }
@@ -630,6 +738,7 @@ static void get_cpu(char *buf, size_t max_len) {
     fclose(fp);
     set_buf(buf, max_len, "Unknown CPU");
 }
+#endif
 
 static const char *get_distro_color(const char *distro) {
     char lower[256];
@@ -647,9 +756,21 @@ static const char *get_distro_color(const char *distro) {
     if (strstr(lower, "nixos"))   return "\033[38;5;110m";
     if (strstr(lower, "red hat") || strstr(lower, "rhel") ||
         strstr(lower, "centos")  || strstr(lower, "redhat")) return "\033[38;5;196m";
+    if (strstr(lower, "macos")   || strstr(lower, "darwin"))  return "\033[38;5;33m";
     return "\033[1;36m";
 }
 
+#ifdef __APPLE__
+static void get_exe_directory(char *dir_buf, size_t max_len) {
+    char path[1024];
+    uint32_t size = sizeof(path);
+    if (_NSGetExecutablePath(path, &size) == 0) {
+        char *slash = strrchr(path, '/');
+        if (slash) { *slash = '\0'; set_buf(dir_buf, max_len, path); return; }
+    }
+    set_buf(dir_buf, max_len, ".");
+}
+#else
 static void get_exe_directory(char *dir_buf, size_t max_len) {
     char path[512];
     ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
@@ -664,6 +785,7 @@ static void get_exe_directory(char *dir_buf, size_t max_len) {
     }
     set_buf(dir_buf, max_len, ".");
 }
+#endif
 
 static char **load_ascii_file(const char *path, int *num_lines) {
     FILE *fp = fopen(path, "r");
@@ -693,6 +815,9 @@ static void free_ascii(char **lines, int num_lines) {
     free(lines);
 }
 
+#ifdef __APPLE__
+static void get_battery(char *buf, size_t max_len) { (void)max_len; buf[0] = '\0'; }
+#else
 static void get_battery(char *buf, size_t max_len) {
     static const char *bat_paths[] = {
         "/sys/class/power_supply/BAT0",
@@ -727,7 +852,11 @@ static void get_battery(char *buf, size_t max_len) {
 
     snprintf(buf, max_len, "%s %d%%%s", bar, capacity, suffix);
 }
+#endif
 
+#ifdef __APPLE__
+static void get_gpu(char *buf, size_t max_len) { (void)max_len; buf[0] = '\0'; }
+#else
 static void get_gpu(char *buf, size_t max_len) {
     static const char *card_paths[] = {
         "/sys/class/drm/card0",
@@ -800,7 +929,11 @@ static void get_gpu(char *buf, size_t max_len) {
     if (device_name[0]) snprintf(buf, max_len, "%s", device_name);
     else                snprintf(buf, max_len, "%s [%04x]", vendor_short, did);
 }
+#endif
 
+#ifdef __APPLE__
+static void get_cpu_temp(char *buf, size_t max_len) { (void)max_len; buf[0] = '\0'; }
+#else
 static void get_cpu_temp(char *buf, size_t max_len) {
     for (int i = 0; i < 10; i++) {
         char path[256];
@@ -817,7 +950,33 @@ static void get_cpu_temp(char *buf, size_t max_len) {
     }
     buf[0] = '\0';
 }
+#endif
 
+#ifdef __APPLE__
+static void get_packages(char *buf, size_t max_len) {
+    static const char *brew_paths[] = {
+        "/opt/homebrew/Cellar", "/usr/local/Cellar", NULL
+    };
+    for (int i = 0; brew_paths[i]; i++) {
+        DIR *dir = opendir(brew_paths[i]);
+        if (!dir) continue;
+        int count = 0;
+        struct dirent *e;
+        while ((e = readdir(dir))) if (e->d_name[0] != '.') count++;
+        closedir(dir);
+        if (count > 0) { snprintf(buf, max_len, "%d (brew)", count); return; }
+    }
+    DIR *dir = opendir("/opt/local/var/macports/registry/installed");
+    if (dir) {
+        int count = 0;
+        struct dirent *e;
+        while ((e = readdir(dir))) if (e->d_name[0] != '.') count++;
+        closedir(dir);
+        if (count > 0) { snprintf(buf, max_len, "%d (ports)", count); return; }
+    }
+    buf[0] = '\0';
+}
+#else
 static void get_packages(char *buf, size_t max_len) {
     int count = 0;
     DIR *dir = opendir("/var/lib/pacman/local");
@@ -850,6 +1009,7 @@ static void get_packages(char *buf, size_t max_len) {
 
     buf[0] = '\0';
 }
+#endif
 
 static void get_disk(char *buf, size_t max_len) {
     struct statvfs vfs;
@@ -870,13 +1030,29 @@ static void get_disk(char *buf, size_t max_len) {
     snprintf(buf, max_len, "%s %.0f%% (%.1f / %.1f GiB)", bar, pct, used_gib, total_gib);
 }
 
+static void get_local_ip(char *buf, size_t max_len) {
+    struct ifaddrs *ifaddr;
+    if (getifaddrs(&ifaddr) == -1) { buf[0] = '\0'; return; }
+    for (struct ifaddrs *ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr) continue;
+        if (ifa->ifa_flags & IFF_LOOPBACK) continue;
+        if (ifa->ifa_addr->sa_family != AF_INET) continue;
+        struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
+        inet_ntop(AF_INET, &addr->sin_addr, buf, max_len);
+        freeifaddrs(ifaddr);
+        return;
+    }
+    freeifaddrs(ifaddr);
+    buf[0] = '\0';
+}
+
 static void print_help(const char *prog) {
     printf("\033[1;36m%s\033[0m - A retro distro fetch utility. ( fastfetch is still better lol )\n\n", prog);
     printf("Usage: %s [options]\n\n", prog);
     printf("Options:\n");
     printf("  -a, --ascii <file>      Path to custom ASCII art file\n");
     printf("  -f, --force-logo <name> Force a specific built-in distro logo\n");
-    printf("                          (arch, debian, ubuntu, fedora, alpine, kali, gentoo, mint, nixos, redhat, linux, default)\n");
+    printf("                          (arch, debian, ubuntu, fedora, alpine, kali, gentoo, mint, nixos, redhat, linux, macos, default)\n");
     printf("  -t, --theme <name>      Color theme for borders and labels\n");
     printf("                          (nord, dracula, gruvbox, catppuccin, amber, default)\n");
     printf("  -n, --no-center-v       Disable full-screen vertical centering\n");
@@ -972,7 +1148,7 @@ int main(int argc, char **argv) {
             /* Invalid -f name: warn and fall back to auto-detected OS logo. */
             fprintf(stderr,
                 "Warning: Unknown forced logo '%s'. "
-                "Supported: arch, debian, ubuntu, fedora, alpine, kali, gentoo, mint, nixos, redhat, linux, default. "
+                "Supported: arch, debian, ubuntu, fedora, alpine, kali, gentoo, mint, nixos, redhat, linux, macos, default. "
                 "Falling back.\n", force_logo_name);
             char os_lower[256];
             set_buf(os_lower, sizeof(os_lower), os_name);
@@ -987,7 +1163,7 @@ int main(int argc, char **argv) {
     char username[256], hostname[256];
     char kernel[256], uptime[256], shell[256], terminal[256], cpu[256];
     char memory_bar[256], battery[256], gpu[256], packages[256], disk[256];
-    char cpu_temp[64];
+    char cpu_temp[64], local_ip[64];
 
     char *user_env = getenv("USER");
     if (user_env) {
@@ -1010,6 +1186,7 @@ int main(int argc, char **argv) {
     get_cpu_temp(cpu_temp, sizeof(cpu_temp));
     get_packages(packages, sizeof(packages));
     get_disk(disk, sizeof(disk));
+    get_local_ip(local_ip, sizeof(local_ip));
 
     const char *reset  = "\033[0m";
 
@@ -1030,7 +1207,7 @@ int main(int argc, char **argv) {
     }
 
     /* Build info rows */
-    char raw_info[14][512];
+    char raw_info[15][512];
     char cpu_display[384];
 
     if (cpu_temp[0])
@@ -1054,6 +1231,7 @@ int main(int argc, char **argv) {
     ROW(raw_info[num_raw], "Memory ", memory_bar); num_raw++;
     if (disk[0])     { ROW(raw_info[num_raw], "Disk   ", disk);     num_raw++; }
     if (battery[0])  { ROW(raw_info[num_raw], "Battery", battery);  num_raw++; }
+    if (local_ip[0]) { ROW(raw_info[num_raw], "IP     ", local_ip); num_raw++; }
 
 #undef ROW
 
