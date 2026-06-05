@@ -1,17 +1,23 @@
 UNAME   := $(shell uname -s)
 CC      = gcc
-CFLAGS  = -O2 -Wall -Wextra
+CFLAGS  = -O2 -Wall -Wextra -Isrc/include
 PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/fasterfetch
 MANDIR  = $(PREFIX)/share/man/man1
 
+SRCS    = src/main.c src/utils/utils.c src/modules/themes.c src/modules/logos.c src/modules/sysinfo.c
+OBJS    = $(SRCS:.c=.o)
+
 .PHONY: all install uninstall clean
 
 all: fasterfetch
 
-fasterfetch: fasterfetch.c
-	$(CC) $(CFLAGS) fasterfetch.c -o fasterfetch
+fasterfetch: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o fasterfetch
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 ifeq ($(UNAME), Darwin)
 install: fasterfetch
@@ -33,4 +39,4 @@ uninstall:
 	-rmdir $(DESTDIR)$(DATADIR) 2>/dev/null || true
 
 clean:
-	rm -f fasterfetch
+	rm -f fasterfetch $(OBJS)

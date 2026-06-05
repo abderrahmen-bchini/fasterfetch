@@ -2,10 +2,6 @@
 set -e
 
 PREFIX="${PREFIX:-/usr/local}"
-BINDIR="$PREFIX/bin"
-DATADIR="$PREFIX/share/fasterfetch"
-MANDIR="$PREFIX/share/man/man1"
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if command -v gcc >/dev/null 2>&1; then
@@ -18,19 +14,14 @@ else
 fi
 
 echo "Building fasterfetch..."
-$CC -O2 -Wall -Wextra "$SCRIPT_DIR/fasterfetch.c" -o "$SCRIPT_DIR/fasterfetch"
+make clean
+make CC="$CC"
 
 echo "Installing to $PREFIX ..."
-install -Dm755 "$SCRIPT_DIR/fasterfetch" "$BINDIR/fasterfetch"
-if [ -f "$SCRIPT_DIR/ascii.txt" ]; then
-    install -Dm644 "$SCRIPT_DIR/ascii.txt" "$DATADIR/ascii.txt"
-fi
-if [ -f "$SCRIPT_DIR/fasterfetch.1" ]; then
-    install -Dm644 "$SCRIPT_DIR/fasterfetch.1" "$MANDIR/fasterfetch.1"
-fi
+make install PREFIX="$PREFIX" DESTDIR="$DESTDIR" CC="$CC"
 
 echo ""
-echo "Installed: $BINDIR/fasterfetch"
+echo "Installed: $PREFIX/bin/fasterfetch"
 echo ""
 echo "To use your own ASCII art:"
 echo "  mkdir -p ~/.config/fasterfetch"

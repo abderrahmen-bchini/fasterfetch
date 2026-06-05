@@ -78,20 +78,22 @@ fasterfetch -h                     # help
 
 ## Build from Source
 
-**Linux:**
+Works on Linux and macOS (requires a C compiler and `make`):
+
 ```bash
-gcc -O2 -Wall -Wextra fasterfetch.c -o fasterfetch
+make
 ```
 
-**macOS:**
-```bash
-clang -O2 -Wall -Wextra fasterfetch.c -o fasterfetch
-```
-
-No external dependencies on either platform.
+No external dependencies.
 
 ## Uninstall
 
+**Quick uninstall:**
+```bash
+sudo bash uninstall.sh
+```
+
+**Manual:**
 ```bash
 sudo make uninstall
 ```
