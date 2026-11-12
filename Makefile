@@ -6,7 +6,8 @@ BINDIR  = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/fasterfetch
 MANDIR  = $(PREFIX)/share/man/man1
 
-SRCS    = src/main.c src/utils/utils.c src/modules/themes.c src/modules/logos.c src/modules/sysinfo.c
+SRCS    = src/main.c src/config.c src/utils/utils.c src/utils/json.c src/modules/themes.c \
+          src/modules/border.c src/modules/module_registry.c src/modules/logos.c src/modules/sysinfo.c
 OBJS    = $(SRCS:.c=.o)
 
 .PHONY: all install uninstall clean

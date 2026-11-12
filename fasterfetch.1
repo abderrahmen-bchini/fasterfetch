@@ -32,12 +32,43 @@ Available themes:
 .BR \-n ", " \-\-no\-center\-v
 Disable full-screen vertical centering. Useful for scrollback-friendly output.
 .TP
+.BR \-c ", " \-\-config " " \fIfile\fR
+Load configuration from \fIfile\fR instead of the default search path.
+.TP
+.BR \-\-no\-config
+Ignore any config file entirely and use built-in defaults.
+.TP
 .BR \-h ", " \-\-help
 Print a usage summary and exit.
+.SH CONFIG FILE
+.B fasterfetch
+reads an optional JSON config file to select a theme or raw colors, choose which info modules are
+shown and in what order, set ASCII art defaults, and control layout (border style, separator,
+padding, and horizontal position). Command-line flags always override the config file, which always
+overrides built-in defaults. A malformed or unreadable config file prints a warning and falls back
+to the next tier rather than aborting.
+.PP
+Search order (first match wins):
+.RS
+.IP 1. 3
+\fB\-c\fR/\fB\-\-config\fR \fIfile\fR (explicit)
+.IP 2. 3
+.I ~/.config/fasterfetch/config.json
+.IP 3. 3
+.I /etc/fasterfetch/config.json
+.IP 4. 3
+built-in defaults
+.RE
 .SH FILES
 .TP
+.I ~/.config/fasterfetch/config.json
+User-specific JSON config file. See CONFIG FILE above.
+.TP
+.I /etc/fasterfetch/config.json
+System-wide JSON config file.
+.TP
 .I ~/.config/fasterfetch/ascii.txt
-User-specific ASCII art. Checked first (after \fB\-a\fR).
+User-specific ASCII art. Checked after \fB\-a\fR and the config file's \fBascii.path\fR.
 .TP
 .I /usr/share/fasterfetch/ascii.txt
 System-wide default ASCII art installed by \fBmake install\fR.

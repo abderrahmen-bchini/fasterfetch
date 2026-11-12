@@ -1,0 +1,15 @@
+{
+  "theme": "nord",
+  "colors": { "border": "", "label": "" },
+  "modules": ["os", "kernel", "cpu", "memory", "disk", "uptime"],
+  "ascii": { "path": "", "force_logo": "" },
+  "layout": {
+    "center_vertical": true,
+    "separator": "│",
+    "pad_left": 2,
+    "pad_right": 2,
+    "border_style": "square",
+    "position": "center",
+    "margin": 0
+  }
+}

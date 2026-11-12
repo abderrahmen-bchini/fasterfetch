@@ -5,21 +5,18 @@ pkgrel=1
 pkgdesc="A retro fetch tool that reads system info directly from kernel interfaces — no subprocesses, no bloat"
 arch=('x86_64' 'aarch64' 'armv7h')
 url="https://github.com/abderrahmen-bchini/fasterfetch"
-license=('custom')
-makedepends=('gcc')
+license=('MIT')
+makedepends=('gcc' 'make')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver/$pkgname-$pkgver.tar.gz")
 sha256sums=('SKIP')
 
 build() {
     cd "$pkgname-$pkgver"
-    gcc -O2 -Wall -Wextra fasterfetch.c -o fasterfetch
+    make CC=gcc
 }
 
 package() {
     cd "$pkgname-$pkgver"
-    install -Dm755 fasterfetch         "$pkgdir/usr/bin/fasterfetch"
-    install -Dm644 fasterfetch.1       "$pkgdir/usr/share/man/man1/fasterfetch.1"
-    if [ -f ascii.txt ]; then
-        install -Dm644 ascii.txt       "$pkgdir/usr/share/fasterfetch/ascii.txt"
-    fi
+    make install DESTDIR="$pkgdir" PREFIX=/usr
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

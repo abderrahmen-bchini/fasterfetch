@@ -1,0 +1,7 @@
+fasterfetch (1.0.0-1) unstable; urgency=medium
+
+  * Initial Debian packaging.
+  * Add JSON config file support (themes, module selection/order, ascii
+    art defaults, border style, layout position).
+
+ -- Abderrahmen Bchini <youssefothman207@gmail.com>  Thu, 12 Nov 2026 01:05:54 +0100

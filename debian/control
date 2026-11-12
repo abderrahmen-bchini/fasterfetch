@@ -1,0 +1,16 @@
+Source: fasterfetch
+Section: utils
+Priority: optional
+Maintainer: Abderrahmen Bchini <youssefothman207@gmail.com>
+Build-Depends: debhelper-compat (= 13), gcc, make
+Standards-Version: 4.6.2
+Homepage: https://github.com/abderrahmen-bchini/fasterfetch
+
+Package: fasterfetch
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Retro fetch tool that reads system info from kernel interfaces
+ fasterfetch is a lightweight neofetch/fastfetch-style system information
+ tool written in C. It reads OS, kernel, CPU, GPU, memory, disk, battery,
+ and network info directly from /proc, /sys, and sysctl -- no shell
+ subprocesses, no bloat.
