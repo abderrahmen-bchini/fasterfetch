@@ -101,10 +101,13 @@ PREFIX=~/.local bash install.sh   # or without sudo
 
 ```bash
 make
-sudo make install
+sudo make install          # system-wide, into /usr/local
+make install-user          # or: no sudo, into ~/.local instead
 ```
 
 Works on macOS too — swap `gcc` for `clang` if needed (`make CC=clang`), though `gcc` usually works fine.
+If you forget `sudo` with the first form, `make install` now tells you about `install-user` instead
+of failing with a bare permission error.
 
 </td></tr>
 </table>
